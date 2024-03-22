@@ -1,21 +1,24 @@
-# 使用带有CUDA的PyTorch官方镜像作为基础镜像
-# 选择与您的cudatoolkit版本相匹配的镜像
-FROM pytorch/pytorch:1.12.1-cuda11.6-cudnn8-runtime
+# 使用官方Conda镜像作为基础镜像
+FROM continuumio/miniconda3:latest
 
 # 设置工作目录
 WORKDIR /app
 
-# 复制项目文件到容器内的/app目录
+# 将GitHub仓库克隆到工作目录下
 COPY . /app
 
-# 使用environment.yml安装依赖
-RUN conda env create -f environment.yml
+# 复制环境文件到工作目录
+COPY environment.yaml /app/environment.yaml
 
-# 激活环境。注意，Conda环境不会在Docker CMD命令中自动激活。
-SHELL ["conda", "run", "-n", "anytext", "/bin/bash", "-c"]
+# 使用conda安装依赖
+RUN conda env create -f environment.yaml
 
-# 暴露端口（如果您的应用需要网络访问）
-EXPOSE 5000
+# 激活Conda环境
+SHELL ["conda", "run", "-n", "anytext", "--"]
 
-# 运行您的应用
-CMD ["conda", "run", "-n", "anytext", "python", "demo.py"]
+# 暴露端口，以便外部可以访问容器中运行的服务
+EXPOSE 8000
+
+# 在容器启动时运行demo.py
+# 这里假设demo.py位于/app目录下，并且它是一个可执行脚本
+CMD ["python", "demo.py"]
